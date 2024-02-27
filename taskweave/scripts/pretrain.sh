@@ -11,7 +11,7 @@ eval_path=data/highlight_val_release.jsonl
 eval_split_name=val
 
 ######## setup video+text features
-feat_root=/data1/yj/mr_hd/moment_detr_features/features
+feat_root=../moment_detr_features/features
 
 # video features
 v_feat_dim=0
