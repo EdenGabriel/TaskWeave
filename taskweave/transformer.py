@@ -55,95 +55,6 @@ def gen_sineembed_for_position(pos_tensor):
     pos = torch.cat((pos_x, pos_w), dim=2)
     return pos
 
-# baseline版本
-# class Transformer(nn.Module):
-
-#     def __init__(self, d_model=512, nhead=8, num_queries=2, num_encoder_layers=6,
-#                  num_decoder_layers=6, dim_feedforward=2048, dropout=0.1,
-#                  activation="relu", normalize_before=False,
-#                  return_intermediate_dec=False, query_dim=2,
-#                  keep_query_pos=False, query_scale_type='cond_elewise',
-#                  num_patterns=0,
-#                  modulate_t_attn=True,
-#                  bbox_embed_diff_each_layer=False,
-#                  ):
-#         super().__init__()
-
-#         t2v_encoder_layer = T2V_TransformerEncoderLayer(d_model, nhead, dim_feedforward,
-#                                                 dropout, activation, normalize_before)
-#         encoder_norm = nn.LayerNorm(d_model) if normalize_before else None
-#         self.t2v_encoder = TransformerEncoder(t2v_encoder_layer, num_encoder_layers, encoder_norm)
-
-
-#         # TransformerEncoderLayerThin
-#         encoder_layer = TransformerEncoderLayer(d_model, nhead, dim_feedforward,
-#                                                 dropout, activation, normalize_before)
-#         encoder_norm = nn.LayerNorm(d_model) if normalize_before else None
-#         self.encoder = TransformerEncoder(encoder_layer, num_encoder_layers, encoder_norm)
-
-#         # TransformerDecoderLayerThin
-#         decoder_layer = TransformerDecoderLayer(d_model, nhead, dim_feedforward,
-#                                                 dropout, activation, normalize_before, keep_query_pos=keep_query_pos)
-#         decoder_norm = nn.LayerNorm(d_model)
-#         self.decoder = TransformerDecoder(decoder_layer, num_decoder_layers, decoder_norm,
-#                                           return_intermediate=return_intermediate_dec,
-#                                           d_model=d_model, query_dim=query_dim, keep_query_pos=keep_query_pos, query_scale_type=query_scale_type,
-#                                           modulate_t_attn=modulate_t_attn,
-#                                           bbox_embed_diff_each_layer=bbox_embed_diff_each_layer)
-
-#         self._reset_parameters()
-
-#         self.d_model = d_model
-#         self.nhead = nhead
-#         self.dec_layers = num_decoder_layers
-#         self.num_queries = num_queries
-#         self.num_patterns = num_patterns
-
-#     def _reset_parameters(self):
-#         for p in self.parameters():
-#             if p.dim() > 1:
-#                 nn.init.xavier_uniform_(p)
-
-#     # for tvsum, add video_length in argument
-#     def forward(self, src, mask, query_embed, pos_embed, video_length=None):
-#         """
-#         Args:
-#             src: (batch_size, L, d)
-#             mask: (batch_size, L)
-#             query_embed: (#queries, d)
-#             pos_embed: (batch_size, L, d) the same as src
-
-#         Returns:
-
-#         """
-#         # flatten NxCxHxW to HWxNxC
-#         bs, l, d = src.shape
-#         src = src.permute(1, 0, 2)  # (L, batch_size, d)
-#         pos_embed = pos_embed.permute(1, 0, 2)   # (L, batch_size, d)
-#         refpoint_embed = query_embed.unsqueeze(1).repeat(1, bs, 1)  # (#queries, batch_size, d)
-
-#         src = self.t2v_encoder(src, src_key_padding_mask=mask, pos=pos_embed, video_length=video_length)  # (L, batch_size, d)
-#         # print('after encoder : ',src.shape)
-#         src = src[:video_length]
-#         mask = mask[:, :video_length]
-#         pos_embed = pos_embed[:video_length]
-
-
-#         memory = self.encoder(src, src_key_padding_mask=mask, pos=pos_embed)  # (L, batch_size, d)
-#         memory_global, memory_local = None, memory[:]
-#         mask_local = mask[:, :]
-#         pos_embed_local = pos_embed[:]
-
-#         tgt = torch.zeros(refpoint_embed.shape[0], bs, d).cuda()
-#         hs, references = self.decoder(tgt, memory_local, memory_key_padding_mask=mask_local,
-#                           pos=pos_embed_local, refpoints_unsigmoid=refpoint_embed)  # (#layers, #queries, batch_size, d)
-#         # hs = hs.transpose(1, 2)  # (#layers, batch_size, #qeries, d)
-#         # memory = memory.permute(1, 2, 0)  # (batch_size, d, L)
-#         memory_local = memory_local.transpose(0, 1)  # (batch_size, L, d)
-#         return hs, references, memory_local, memory_global
-
-
-
 class Transformer(nn.Module):
 
     def __init__(self, d_model=512, nhead=8, num_queries=2, num_encoder_layers=6,
@@ -164,9 +75,7 @@ class Transformer(nn.Module):
 
         encoder_layer = TransformerEncoderLayer(d_model, nhead, dim_feedforward,dropout, activation, normalize_before)
         encoder_norm = nn.LayerNorm(d_model) if normalize_before else None
-        # self.encoder = TransformerEncoder(encoder_layer, num_encoder_layers//2, encoder_norm)
 
-        # self.temporalmaxer = nn.MaxPool1d(kernel_size=3, stride=1, padding=1)
         self.temporalmaxer = nn.MaxPool1d(kernel_size=5, stride=1, padding=2)
 
         self.shared_encoder = TransformerEncoder(encoder_layer, num_layers=2, norm=encoder_norm)
@@ -204,11 +113,9 @@ class Transformer(nn.Module):
         #    setattr(self, "gate_layer"+str(i+1),nn.Sequential(nn.Linear(d_model, 2),nn.Softmax(dim=1)))
         # self.task_gates = [getattr(self,"gate_layer"+str(i+1)) for i in range(2)]
 
-        # # TransformerEncoderLayerThin
         # encoder_layer = TransformerEncoderLayer(d_model, nhead, dim_feedforward,
         #                                         dropout, activation, normalize_before)
         # encoder_norm = nn.LayerNorm(d_model) if normalize_before else None
-        # # 每个分支均分num_encoder_layers
         # self.encoder = TransformerEncoder(encoder_layer, num_encoder_layers//2, encoder_norm)
 
         # TransformerDecoderLayerThin
@@ -257,7 +164,6 @@ class Transformer(nn.Module):
         vid_txt_src_mask = mask[:, :video_length]
         vid_txt_src_pos_embed = pos_embed[:video_length]
 
-        # input_src = self.encoder(vid_txt_src, src_key_padding_mask=vid_txt_src_mask, pos=vid_txt_src_pos_embed)  # (L, batch_size, d)
         input_src = vid_txt_src
         input_mask, input_pos_embd = vid_txt_src_mask, vid_txt_src_pos_embed
 
@@ -266,8 +172,6 @@ class Transformer(nn.Module):
         mr_input_src = self.mr_linear(input_src)
         hd_input_src = self.hd_linear(input_src)
 
-        # input_src: (L,bsz,dim)    75, 32, 256
-        # input_mask: (bsz,L)    32, 75
         mr_shared_embd = self.shared_encoder(mr_input_src, src_key_padding_mask=input_mask, pos=input_pos_embd)
         mr_shared_embd = self.temporalmaxer(mr_shared_embd.permute(1,2,0)).permute(2,0,1)
         hd_shared_embd = self.shared_encoder(hd_input_src, src_key_padding_mask=input_mask, pos=input_pos_embd)
@@ -287,10 +191,11 @@ class Transformer(nn.Module):
         mr_spec = self.mr_norm(mr_spec)
         mr_spec = self.mr_proj(mr_spec).permute(2,0,1)
 
+        hd_spec = hd_input_src
         # hd_spec,_ = self.hd_conv(x=input_src.permute(1,2,0),mask=input_mask.unsqueeze(1))
         # hd_spec = self.hd_norm(hd_spec)
         # hd_spec = self.hd_proj(hd_spec).permute(2,0,1)
-        hd_spec = hd_input_src
+        
         # mr_spec = mr_spec*mr_spec_conv
         # hd_spec = hd_spec*hd_spec_conv
 
@@ -333,8 +238,6 @@ class Transformer(nn.Module):
         tgt = torch.zeros(refpoint_embed.shape[0], bs, d).cuda()
         hs, references = self.mr_decoder(tgt, mr_spec, memory_key_padding_mask=input_mask,
                           pos=input_pos_embd, refpoints_unsigmoid=refpoint_embed)  # (#layers, #queries, batch_size, d)
-        # hs = hs.transpose(1, 2)  # (#layers, batch_size, #qeries, d)
-        # memory = memory.permute(1, 2, 0)  # (batch_size, d, L)
         mr_memory = mr_spec.transpose(0, 1)  # (batch_size, L, d)
         hd_memory = hd_spec.transpose(0, 1)  # (batch_size, L, d)
         return hs, references, mr_memory, hd_memory
@@ -547,9 +450,7 @@ class TransformerDecoder(nn.Module):
             obj_center = reference_points[..., :self.query_dim]
             # get sine embedding for the query vector
             query_sine_embed = gen_sineembed_for_position(obj_center)
-            # print('line230', query_sine_embed.shape)
             query_pos = self.ref_point_head(query_sine_embed)
-            # print('line232',query_sine_embed.shape)
             # For the first decoder layer, we do not apply transformation over p_s
             if self.query_scale_type != 'fix_elewise':
                 if layer_id == 0:
@@ -653,17 +554,8 @@ class T2V_TransformerEncoderLayer(nn.Module):
         pos_src = self.with_pos_embed(src, pos)
         q, k, v = pos_src[:video_length], pos_src[video_length:], src[video_length:]
 
-        # print(src_key_padding_mask.shape) # torch.Size([32, 102])
-        # print(src_key_padding_mask[:, 1:76].permute(1,0).shape) # torch.Size([75, 32])
-        # print(src_key_padding_mask[:, 76:].shape) # torch.Size([32, 26])
-
         qmask, kmask = src_key_padding_mask[:, :video_length].unsqueeze(2), src_key_padding_mask[:, video_length :].unsqueeze(1)
         attn_mask = torch.matmul(qmask.float(), kmask.float()).bool().repeat(self.nhead, 1, 1)
-        # print(attn_mask.shape)
-        # print(attn_mask[0][0])
-        # print(q.shape) 75 32 256
-        # print(k.shape) 26 32 256
-
 
         src2 = self.self_attn(q, k, value=v, attn_mask=attn_mask,
                               key_padding_mask=src_key_padding_mask[:, video_length:])[0]
@@ -673,7 +565,6 @@ class T2V_TransformerEncoderLayer(nn.Module):
         src2 = src2 + self.dropout2(src3)
         src2 = self.norm2(src2)
         src = torch.cat([src2, src[video_length:]])
-        # print('after src shape :',src.shape)
         return src
 
     def forward_pre(self, src,
@@ -684,8 +575,6 @@ class T2V_TransformerEncoderLayer(nn.Module):
         src2 = self.norm1(src)
         pos_src = self.with_pos_embed(src2, pos)
         q, k, v = pos_src[0:75], pos_src[75:], src2[75:]
-        # print(q.shape) # 100 32 256
-
 
         src2 = self.self_attn(q, k, value=v, attn_mask=src_key_padding_mask[:, 0:75].permute(1,0),
                               key_padding_mask=src_key_padding_mask[:, 75:])[0]
@@ -896,19 +785,6 @@ class TransformerDecoderLayer(nn.Module):
 
 def _get_clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
-
-
-# def build_transformer(args):
-#     return Transformer(
-#         d_model=args.hidden_dim,
-#         dropout=args.dropout,
-#         nhead=args.nheads,
-#         dim_feedforward=args.dim_feedforward,
-#         num_encoder_layers=args.enc_layers,
-#         num_decoder_layers=args.dec_layers,
-#         normalize_before=args.pre_norm,
-#         return_intermediate_dec=True,
-#     )
 
 def build_transformer(args):
     return Transformer(
