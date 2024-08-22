@@ -29,11 +29,13 @@ bash taskweave/scripts/inference.sh results/{direc}/model_best.ckpt 'test'
 If you are using our code, please consider citing the following paper.
 
 ```
-@inproceedings{yang2024taskweave,
-  title={Task-Driven Exploration: Decoupling and Inter-Task Feedback for Joint Moment Retrieval and Highlight Detection},
-  author={Yang, Jin and Wei, Ping and Li, Huan and Ren, Ziyang}
-  booktitle={CVPR},
-  year={2024}
+@InProceedings{Yang_2024_CVPR,
+    author    = {Yang, Jin and Wei, Ping and Li, Huan and Ren, Ziyang},
+    title     = {Task-Driven Exploration: Decoupling and Inter-Task Feedback for Joint Moment Retrieval and Highlight Detection},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2024},
+    pages     = {18308-18318}
 }
 ```
 
