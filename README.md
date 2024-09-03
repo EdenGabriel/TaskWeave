@@ -1,19 +1,26 @@
 [CVPR 2024 Accepted] Task-Driven Exploration: Decoupling and Inter-Task Feedback for Joint Moment Retrieval and Highlight Detection
 
-# Task-Driven Exploration: Decoupling and Inter-Task Feedback for Joint Moment Retrieval and Highlight Detection
+**TaskWeave**
+===
 
-[Arxiv](https://arxiv.org/abs/2404.09263)
-### Introduction
+[![Static Badge](https://img.shields.io/badge/arxiv-2404.09263-red)](https://arxiv.org/abs/2404.09263)
+[![Static Badge](https://img.shields.io/badge/LICENSE-blue)](https://github.com/EdenGabriel/TaskWeave/blob/master/LICENSE)
+![GitHub Repo stars](https://img.shields.io/github/stars/EdenGabriel/TaskWeave)
+![GitHub forks](https://img.shields.io/github/forks/EdenGabriel/TaskWeave)
+
+### ✨Introduction
 This code repo implements TaskWeave in _CVPR 2024_, the first attempt to explore the task-driven paradigm for joint Moment Retrieval and Highlight Detection. In this paper, we present the first task-driven top-down framework, named TaskWeave. We introduce a task-decoupled unit to capture task-specific and common representations. To further investigate the interactions between these two tasks, we propose an inter-task feedback mechanism. It transforms the results of one task into guiding masks to assist the other task. Lastly, different from existing methods, we present a task-dependent joint loss function to optimize the model. As far as we are aware, this is the first framework to address this joint task from the task-centric perspective. Comprehensive experiments and in-depth ablation studies on QVHighlights, TVSum, and Charades-STA datasets corroborate the effectiveness and flexibility of the proposed framework.
 ![pipeline](./pipeline.png)
 ![feedbacks](./feedbacks.png)
 
-### Data Preparation/Installation/More Details
+### 🔎Data Preparation/Installation/More Details
 Please refer to [MomentDETR](https://github.com/jayleicn/moment_detr) for more details.
+
 Please refer to [UMT](https://github.com/TencentARC/UMT) for more details.
+
 Please refer to [QD-DETR](https://github.com/wjun0830/QD-DETR) for more details.
 
-### Training and Evaluation
+### 🔧Training and Evaluation
 - Train(Take `QVHighlights` as an example)
 ```python 
 bash taskweave/scripts/train.sh 
