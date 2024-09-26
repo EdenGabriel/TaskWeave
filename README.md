@@ -9,7 +9,7 @@
 ![GitHub forks](https://img.shields.io/github/forks/EdenGabriel/TaskWeave)
 
 ### News
-- [2024/08] TaskWeave is supported in the open-source project (Lighthouse)[https://github.com/line/lighthouse].
+- [2024/08] TaskWeave is supported in the open-source project [Lighthouse](https://github.com/line/lighthouse).
 - [2024/02/28] We release the code about TaskWeave.
 - [2024/02/27] Our paper is accepted by CVPR2024.
 
